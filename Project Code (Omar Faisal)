@@ -1,0 +1,402 @@
+class container:
+    def __init__(self, container_id, weight, station_instance):
+        self.id = container_id
+        self.weight = weight
+        self.station_instance = station_instance
+
+    def weight_container(self):
+        return self.weight
+
+    def id_container(self):
+        return self.id
+
+    def fuel_consumption(self):
+        return 0
+
+    def container_type(self):
+        return "general"
+
+    def check_equal(self, other):
+        if type(self.id) == type(other.id) and type(self.weight) == type(other.weight):
+            return "True"
+        else:
+            return "false"
+
+    def container_list(self):
+        self.station_instance.containers['general'].append(self)
+
+
+
+
+class NormalContainer(container):
+    def __init__(self, container_id, weight, station_instance):
+        super().__init__(container_id, weight, station_instance)
+
+    def container_type(self):
+        if self.weight <= 3000:
+            return "Normal container"
+
+    def fuel_consumption(self):
+        if self.weight <= 3000:
+            return self.weight * 2.50
+
+    def check_type(self, other):
+        if type(self.id) == type(other.id) and type(self.weight) == type(other.weight):
+            return "True"
+        else:
+            return "false"
+
+    def container_list(self):
+        self.station_instance.containers['NormalContainer'].append(self)
+
+    def __str__(self):
+        return f"NormalContainer(ID: {self.id}, weight: {self.weight})"
+
+class HeavyContainer(container):
+    def __init__(self, container_id, weight, station_instance):
+        super().__init__(container_id, weight, station_instance)
+
+    def fuel_consumption(self):
+        if self.weight > 3000:
+            return self.weight * 3.00
+
+    def container_type(self):
+        if self.weight > 3000:
+            return "Heavy container"
+
+    def check_type(self, other):
+        if type(self.id) == type(other.id) and type(self.weight) == type(other.weight):
+            return "True"
+        else:
+            return "false"
+
+    def container_list(self):
+        if isinstance(self, RefrigeratedContainer):
+            self.station_instance.containers['RefrigeratedContainer'].append(self)
+        elif isinstance(self, LiquidContainer):
+            self.station_instance.containers['LiquidContainer'].append(self)
+        else:
+            self.station_instance.containers['HeavyContainer'].append(self)
+
+    def __str__(self):
+        return f"HeavyContainer(ID: {self.id}, weight: {self.weight})"
+
+
+class RefrigeratedContainer(HeavyContainer):
+    def __init__(self, id, weight, Heavy_type, station_instance):
+        super().__init__(id, weight, station_instance)
+        self.type = Heavy_type
+
+    def Type_of_container(self):
+        if self.type == "r" or "R":
+            return "Refrigerated_container"
+
+    def fuel_consumption(self):
+        if self.type == "r" or "R":
+            return self.weight * 5.00
+
+    def container_list(self):
+        if isinstance(self, RefrigeratedContainer):
+            self.station_instance.containers['RefrigeratedContainer'].append(self)
+
+    def __str__(self):
+        return f"RefrigeratedContainer(ID: {self.id}, weight: {self.weight}, type: {self.type})"
+
+
+class LiquidContainer(HeavyContainer):
+    def __init__(self, id, weight, Heavy_type, station_instance):
+        super().__init__(id, weight, station_instance)
+        self.type = Heavy_type
+
+
+    def Type_of_container(self):
+        if self.type == "l" or "L":
+            return "Liquid container"
+
+    def fuel_consumption(self):
+        if self.type == "l" or "L":
+            return self.weight * 4.00
+
+    def container_list(self):
+        self.station_instance.containers['LiquidContainer'].append(self)
+
+    def __str__(self):
+        return f"LiquidContainer(ID: {self.id}, weight: {self.weight}, type: {self.type})"
+class Station:
+ station_id = 0
+ stations=[]
+ def __init__(self, station_id, x, y):
+     self.id = station_id
+     self.x = x
+     self.y = y
+     self.containers = {'NormalContainer': [], 'HeavyContainer': [], 'RefrigeratedContainer': [],
+                          'LiquidContainer': []}
+     self.current_car = []
+     self.stations.append(self)
+     Station.station_id += 1
+
+ def id_of_station(self):
+    return self.id
+
+ def postion_x(self):
+    return self.x
+
+ def postion_y(self):
+    return self.y
+
+ def distance(self, other):
+    return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+
+ def add_car_to_current(self, car):
+     if car not in self.current_car:
+         self.current_car.append(car)
+
+ def getcurrentcar(self):
+    return self.current_car
+
+ def checkconatainer(self,container):
+     for i in self.containers.values():
+         for j in i:
+             if j.getID() == container.getID():
+                 return True
+     return False
+
+ def __str__(self):
+     return f"Station {self.id}: ({'{:.2f}'.format(float(self.x))}, {'{:.2f}'.format(float(self.y))})"
+
+ def printContainers(self):
+     print(self)
+     output = ""
+     for key, value in self.containers.items():
+       output += (f" {key.replace(' ', '')}: {' '.join(str(i) for i in value)}\n")
+     return output
+
+class Car:
+    def __init__(self, currentstation,destination, car_id,  current, fuelConsumptionPerKM, maxNumberOfAllContainers,
+                 maxNumberOfHeavyContainers,
+                 maxNumberOfRefrigeratedContainers, maxNumberOfLiquidContainers):
+        self.id = car_id
+        self.fuel = 0
+        self.current = current
+        self.destination = destination
+        self.currentStation = currentstation
+        self.loadedcontainers = []
+        self.maxNumberOfAllContainers = maxNumberOfAllContainers
+        self.maxNumberOfHeavyContainers = maxNumberOfHeavyContainers
+        self.maxNumberOfRefrigeratedContainers = maxNumberOfRefrigeratedContainers
+        self.maxNumberOfLiquidContainers = maxNumberOfLiquidContainers
+        self.currentnumberofcontainers = 0
+        self.currentheavycontainer = 0
+        self.currentliquidcontainer = 0
+        self.currentnormalcontainer = 0
+        self.currentrefrigeratedcontainer = 0
+        self.fuelConsumptionPerKM = fuelConsumptionPerKM
+
+    def car_id(self):
+        return self.id
+
+    def current(self):
+        self.current.current_car.append(self)
+
+    def getCurrentContainers(self):
+        return sorted(self.loadedcontainers, key=lambda cont: cont.contid)
+
+    def calculateFuelConsumption(self):
+        fuelConsumption = 0
+        for container in self.loadedcontainers:
+            fuelConsumption += container.fuel_consumption()
+        if self.currentStation.current_car:
+            fuelConsumption += self.fuelConsumptionPerKM * self.currentStation.distance(
+                self.currentStation.car_history[-1])
+            return fuelConsumption
+        return fuelConsumption
+
+    def refuel(self):
+        self.fuel = int(self.fuel + self.calculateFuelConsumption())
+        return self.fuel
+
+    def move(self, destination):
+        fuelConsumption = self.calculateFuelConsumption()
+        if fuelConsumption <= self.fuel:
+            self.fuel -= fuelConsumption
+            try:
+                self.currentStation.current_car.remove(self)
+            except ValueError:
+                pass
+            self.currentStation.add_car_to_current(self)
+            destination.add_car_to_current(self)
+            return True
+        else:
+            return False
+
+
+class Main:
+    print("|=============== Test Case 1 ===============|")
+    station1 = Station(1, 10, 20)
+    station2 = Station(2, 30, 10)
+    print(station1)
+    print(station2)
+
+    container1 = NormalContainer(1, 1000, station1)
+    container2 = HeavyContainer(2, 4000, station1)
+
+    station1.containers['NormalContainer'].append(container1)
+    station1.containers['HeavyContainer'].append(container2)
+
+    car1 = Car(station1, station2, 1, [], 2.5, 10, 5, 2, 3)
+    car1.loadedcontainers.extend([container1, container2])
+
+    for container_type, container_list in station1.containers.items():
+        for container_instance in container_list:
+            print(f"{str(container_instance)} is a {container_type} at {station1}")
+
+    print(f"Car {car1.id}:")
+    print(f"  Fuel consumption = {car1.calculateFuelConsumption():.2f}")
+    print("  Loaded containers:")
+    loaded_containers_dict = {}
+    for container in car1.loadedcontainers:
+        container_type = type(container).__name__
+        if container_type in loaded_containers_dict:
+            loaded_containers_dict[container_type] += 1
+        else:
+            loaded_containers_dict[container_type] = 1
+    for container_type, count in loaded_containers_dict.items():
+        print(f"    {count} {container_type} container{'s' if count > 1 else ''}")
+    print(f"The refuel for the car is {car1.refuel()} ")
+
+
+    car1.move(station2)
+
+    for container in car1.loadedcontainers:
+        container_type = type(container).__name__
+        print(f"Adding {container_type}: {container.id} to station2")
+        station2.containers[container_type].append(str(container))
+        car1.loadedcontainers = []
+
+    for container_type, container_list in station2.containers.items():
+        for container_instance in container_list:
+            print(f"{str(container_instance)} is a {container_type} at {station2}")
+
+    distance = Station.distance(station1, station2)
+    print(f"Distance between {station1} and {station2}: {distance:.2f}")
+    print(f"Containers at station {station2.id}: {station2.containers}")
+
+
+    stations = [station1, station2]
+    for station in stations:
+        car_list = ', '.join([f"Car {car.id}" for car in station.getcurrentcar()])
+        print(f" Current Car at station {station.id}: [{car_list if car_list else 'None'}]")
+
+    print("|=============== Test Case 2 ===============|")
+    station3 = Station(3, 30, 50)
+    station4 = Station(4, 50, 20)
+    print(station3)
+    print(station4)
+
+    container3 = NormalContainer(3, 1000, station3)
+    container4 = HeavyContainer(4, 4000, station4)
+    container5 = RefrigeratedContainer(5, 5000, "R", station3)
+
+    station3.containers['NormalContainer'].append(container3)
+    station3.containers['HeavyContainer'].append(container4)
+    station3.containers['RefrigeratedContainer'].append(container5)
+
+    car2 = Car(station3, station4, 2, [], 3, 20, 10, 4, 5)
+    car2.loadedcontainers.extend([container3, container4,container5])
+
+    for container_type, container_list in station3.containers.items():
+        for container_instance in container_list:
+            print(f"{container_instance} is a {container_type} at {station3}")
+
+    print(f"Car {car2.id}:")
+    print(f"  Fuel consumption = {car2.calculateFuelConsumption():.2f}")
+    print("  Loaded containers:")
+    loaded_containers_dict = {}
+    for container in car2.loadedcontainers:
+        container_type = type(container).__name__
+        if container_type in loaded_containers_dict:
+            loaded_containers_dict[container_type] += 1
+        else:
+            loaded_containers_dict[container_type] = 1
+    for container_type, count in loaded_containers_dict.items():
+        print(f"    {count} {container_type} container{'s' if count > 1 else ''}")
+    print(f"The refuel for the car is {car2.refuel()} ")
+
+    car2.move(station4)
+
+    for container in car2.loadedcontainers:
+        container_type = type(container).__name__
+        print(f"Adding {container_type}: {container.id} to station4")
+        station4.containers[container_type].append(str(container))
+        car2.loadedcontainers = []
+
+    for container_type, container_list in station4.containers.items():
+        for container_instance in container_list:
+            print(f"{str(container_instance)} is a {container_type} at {station4}")
+
+    distance = Station.distance(station3, station4)
+    print(f"Distance between {station3} and {station4}: {distance:.2f}")
+    print(f"Containers at station {station4.id}: {str(station4.containers)}")
+
+    stations = [station1, station2, station3, station4]
+    for station in stations:
+        car_list = ', '.join([f"Car {car.id}" for car in station.getcurrentcar()])
+        print(f" Current Cars at station {station.id}: [{car_list if car_list else 'None'}]")
+
+    print("|=============== Test Case 3 ===============|")
+    station1 = Station(1, 10, 20)
+    station3 = Station(3, 30, 50)
+    container6 = LiquidContainer(6, 5000,'L', station3)
+    container7 = RefrigeratedContainer(7, 4000,'R', station3)
+
+    station3.containers['LiquidContainer'].append(container6)
+    station3.containers['RefrigeratedContainer'].append(container7)
+
+    car3 = Car(station3, station1, 3, [], 2.5, 10, 5, 2, 3)
+    car3.loadedcontainers.extend([container6, container7])
+
+    for container_type, container_list in station3.containers.items():
+        for container_instance in container_list:
+            print(f"{str(container_instance)} is a {container_type} at {station3}")
+
+
+    print(f"Car {car3.id}:")
+    print(f"  Fuel consumption = {car3.calculateFuelConsumption():.2f}")
+    print("  Loaded containers:")
+    loaded_containers_dict = {}
+    for container in car3.loadedcontainers:
+        container_type = type(container).__name__
+        if container_type in loaded_containers_dict:
+            loaded_containers_dict[container_type] += 1
+        else:
+            loaded_containers_dict[container_type] = 1
+    for container_type, count in loaded_containers_dict.items():
+        print(f"    {count} {container_type} container{'s' if count > 1 else ''}")
+    print(f"The refuel for the car is {car3.refuel()} ")
+
+    car3.move(station1)
+
+    for container in car3.loadedcontainers:
+        container_type = type(container).__name__
+        print(f"Adding {container_type}: {container.id} to station1")
+        station1.containers[container_type].append(str(container))
+        car3.loadedcontainers = []
+
+    for container_type, container_list in station1.containers.items():
+        for container_instance in container_list:
+            print(f"{str(container_instance)} is a {container_type} at {station1}")
+
+    distance = Station.distance(station3, station1)
+    print(f"Distance between {station3} and {station1}: {distance:.2f}")
+    print(f"Containers at station {station1.id}: {str(station1.containers)}")
+
+    stations = [station1, station2, station3, station4]
+    for station in stations:
+        car_list = ', '.join([f"Car {car.id}" for car in station.getcurrentcar()])
+        print(f" Current Cars at station {station.id}: [{car_list if car_list else 'None'}]")
+
+
+if __name__ == "__main__":
+    m = Main()
+
+
